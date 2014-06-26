@@ -1,0 +1,23 @@
+{
+  "name": "thunkarator",
+  "version": "0.0.0",
+  "description": "start async jobs when you want, access the results when you want.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "debug": "^1.0.2",
+    "thunkify": "^2.1.2"
+  },
+  "devDependencies": {
+    "co": "^3.0.6",
+    "mocha": "^1.20.1",
+    "should": "^4.0.4"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "author": "Matthew Chase Whittemore <mcwhittemore@gmail.com>",
+  "license": "MIT"
+}

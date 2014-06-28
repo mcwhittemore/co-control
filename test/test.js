@@ -4,7 +4,7 @@ var thunkify = require("thunkify");
 //var store = require("./store");
 var Thunkarator = require("../");
 
-describe("confirm thunkarator", function(){
+describe("co-control should", function(){
 
 	var result = {
 		one: {},
@@ -13,52 +13,140 @@ describe("confirm thunkarator", function(){
 		four: {}
 	};
 
+	var errors = {
+		dupe: null,
+		notDupe: null,
+		thrown: {}
+	}
+
+	var tasks = Object.keys(result);
+
 	var delayName = thunkify(function(name, time, cb){
 		result[name].delay = time;
+		result[name].start = process.hrtime()[1];
 		setTimeout(function(){
-			result[name].ready = Date.now();
+			result[name].ready = process.hrtime()[1];
 			cb(null, name);
 		},time);
 	});
 
+	var noop = thunkify(function(cb){cb()});
+
+	var fail = thunkify(function(cb){ 
+		cb(new Error("always"));
+	});
+
 	before(function(done){
+
+		var thunkster = new Thunkarator();
+
+		function enqueue(name, time){
+			thunkster.start(name, delayName(name, time));
+			result[name].queued = process.hrtime()[1];
+		}
+
+		function gather(name){
+			return function*(){
+				result[name].called = process.hrtime()[1];
+				result[name].value = yield thunkster.get(name);
+				result[name].returned = process.hrtime()[1];
+			}
+		}
+
 		co(function*(){
-			var thunkster = new Thunkarator();
+			enqueue("one");
+			enqueue("two");
+			enqueue("three");
 
-			thunkster.start("one", delayName("one", 400));
-			result.one.start = Date.now();
-			thunkster.start("two", delayName("two", 500));
-			result.two.start = Date.now();
-			thunkster.start("three", delayName("three", 300));
-			result.three.start = Date.now();
+			try{
+				thunkster.start("one", noop());
+			}
+			catch(err){
+				errors.dupe = err;
+			}
 
-			result.one.called = Date.now();
-			result.one.value = yield thunkster.get("one");
-			result.one.returned = Date.now();
+			yield gather("one");
 
-			thunkster.start("four", delayName("four", 1));
-			result.four.start = Date.now();
+			enqueue("four");
 
-			result.two.called = Date.now();
-			result.two.value = yield thunkster.get("two");
-			result.two.returned = Date.now();
+			yield gather("two");
+			yield gather("three");
+			yield gather("four");
 
-			result.three.called = Date.now();
-			result.three.value = yield thunkster.get("three");
-			result.three.returned = Date.now();
+			try{
+				thunkster.start("one", noop);
+				errors.notDupe = yield thunkster.get("one");
+			}
+			catch(err){
+				errors.notDupe = err;
+			}
 
-			result.four.called = Date.now();
-			result.four.value = yield thunkster.get("four");
-			result.four.returned = Date.now();
-
+			try{
+				thunkster.start("thrown", fail());
+				errors.thrown.afterStart = process.hrtime()[1];
+				yield thunkster.get("thrown");
+				errors.thrown.never = process.hrtime()[1];
+			}
+			catch(err){
+				errors.thrown.err = err;
+			}
 
 			done();
 		})();
 	});
 
-	it("test", function(){
-		console.log(result);
+	it("not yield a result until the async is done", function(){
+		tasks.forEach(function(task){
+			result[task].ready.should.be.lessThan(result[task].returned);
+		});
 	});
+
+	it("start a co-routinue asap", function(){
+		tasks.forEach(function(task){
+			result[task].start.should.be.lessThan(result[task].queued);
+		});
+	});
+
+	it("throw an error when enqueueing a task of the same name as one pending", function(){
+		if(errors.dupe){
+			errors.dupe.message.should.equal("You cannot reuse pending keys");
+		}
+		else{
+			throw new Error("No error thrown when it should have been");
+		}
+	});
+
+	it("yield the correct co-routinues value", function(){
+		tasks.forEach(function(task){
+			result[task].value.should.equal(task);
+		});
+	});
+
+	it("let multiple co-routinues run at once", function(){
+		result.two.start.should.be.lessThan(result.one.ready);
+		result.three.start.should.be.lessThan(result.one.ready);
+	});
+
+	it("let you resuse a name after its been returned", function(){
+		errors.notDupe.should.not.be.an.instanceof(Error);
+		errors.notDupe.should.equal("one");
+	});
+
+	//this is not passings
+	it("throw an error on async failure", function(){
+		if(errors.thrown.afterStart===undefined){
+			throw new Error("Error thrown at thunkster.start not thunkster.get");
+		}
+		else if(errors.thrown.never!==undefined){
+			throw new Error("Error not thrown on get");
+		}
+		else{
+			errors.thrown.err.should.be.an.instanceof(Error);
+		}
+	});
+
+	//request feature by test
+	it("allow you to wait for multiple co-routinues to finish");
 
 });
 

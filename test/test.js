@@ -10,22 +10,25 @@ describe("co-control should", function(){
 		one: {},
 		two: {},
 		three: {},
-		four: {}
-	};
-
-	var errors = {
+		four: {},
+		a: {},
+		b: {},
+		c: {}, 
 		dupe: null,
 		notDupe: null,
-		thrown: {}
-	}
+		thrown: {},
+		multi: {}
+	};
 
-	var tasks = Object.keys(result);
+	var tasks = ["one", "two", "three", "four"];
+
+	var orderOfOpp = 0;
 
 	var delayName = thunkify(function(name, time, cb){
 		result[name].delay = time;
-		result[name].start = process.hrtime()[1];
+		result[name].start = orderOfOpp++;
 		setTimeout(function(){
-			result[name].ready = process.hrtime()[1];
+			result[name].ready = orderOfOpp++;
 			cb(null, name);
 		},time);
 	});
@@ -42,32 +45,36 @@ describe("co-control should", function(){
 
 		function enqueue(name, time){
 			thunkster.start(name, delayName(name, time));
-			result[name].queued = process.hrtime()[1];
+			result[name].queued = orderOfOpp++;
 		}
 
 		function gather(name){
 			return function*(){
-				result[name].called = process.hrtime()[1];
+				result[name].called = orderOfOpp++;
 				result[name].value = yield thunkster.get(name);
-				result[name].returned = process.hrtime()[1];
+				result[name].returned = orderOfOpp++;
 			}
 		}
 
 		co(function*(){
-			enqueue("one");
-			enqueue("two");
-			enqueue("three");
+			thunkster.start("a", delayName("a", 30));
+			thunkster.start("b", delayName("b", 40));
+			thunkster.start("c", delayName("c", 100));
+
+			enqueue("one", 400);
+			enqueue("two", 300);
+			enqueue("three", 200);
 
 			try{
 				thunkster.start("one", noop());
 			}
 			catch(err){
-				errors.dupe = err;
+				result.dupe = err;
 			}
 
 			yield gather("one");
 
-			enqueue("four");
+			enqueue("four", 1);
 
 			yield gather("two");
 			yield gather("three");
@@ -75,21 +82,23 @@ describe("co-control should", function(){
 
 			try{
 				thunkster.start("one", noop);
-				errors.notDupe = yield thunkster.get("one");
+				result.notDupe = yield thunkster.get("one");
 			}
 			catch(err){
-				errors.notDupe = err;
+				result.notDupe = err;
 			}
 
 			try{
 				thunkster.start("thrown", fail());
-				errors.thrown.afterStart = process.hrtime()[1];
-				errors.thrown.value = yield thunkster.get("thrown");
-				errors.thrown.never = process.hrtime()[1];
+				result.thrown.afterStart = orderOfOpp++;
+				result.thrown.value = yield thunkster.get("thrown");
+				result.thrown.never = orderOfOpp++;
 			}
 			catch(err){
-				errors.thrown.err = err;
+				result.thrown.err = err;
 			}
+
+			result.multi = yield thunkster.all("a", "b", "c");
 
 			done();
 		})();
@@ -108,8 +117,8 @@ describe("co-control should", function(){
 	});
 
 	it("throw an error when enqueueing a task of the same name as one pending", function(){
-		if(errors.dupe){
-			errors.dupe.message.should.equal("You cannot reuse pending keys");
+		if(result.dupe){
+			result.dupe.message.should.equal("You cannot reuse pending keys");
 		}
 		else{
 			throw new Error("No error thrown when it should have been");
@@ -128,25 +137,28 @@ describe("co-control should", function(){
 	});
 
 	it("let you resuse a name after its been returned", function(){
-		errors.notDupe.should.not.be.an.instanceof(Error);
-		errors.notDupe.should.equal("one");
+		result.notDupe.should.not.be.an.instanceof(Error);
+		result.notDupe.should.equal("one");
 	});
 
 	it("throw an error on async failure", function(){
-		if(errors.thrown.afterStart===undefined){
+		if(result.thrown.afterStart===undefined){
 			throw new Error("Error thrown at thunkster.start not thunkster.get");
 		}
-		else if(errors.thrown.never!==undefined){
-			console.log(errors.thrown);
+		else if(result.thrown.never!==undefined){
+			console.log(result.thrown);
 			throw new Error("Error not thrown on get");
 		}
 		else{
-			errors.thrown.err.should.be.an.instanceof(Error);
+			result.thrown.err.should.be.an.instanceof(Error);
 		}
 	});
 
-	//request feature by test
-	it("allow you to wait for multiple co-routinues to finish");
+	it("allow you to wait for multiple co-routinues to finish", function(){
+		result.multi.should.have.property("a", "a");
+		result.multi.should.have.property("b", "b");
+		result.multi.should.have.property("c", "c");
+	});
 
 });
 

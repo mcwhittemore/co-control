@@ -39,17 +39,36 @@ Thunkarator.prototype.get = function(key){
 			cb(result.err, result.result);
 		}
 
-		var result = rator.done[key];
-		if(result){
+		gather(rator, key, function(result){
 			respond(result);
-		}
-		else{
-			debug(key, "waiting...");
-			rator.on(key, function(result){
-				respond(result);
-			});
-		}
+		});
+
+		
 	})(this);
+}
+
+function gather(rator, key, cb){
+	var result = rator.done[key];
+	if(result){
+		cb(result);
+	}
+	else{
+		debug(key, "waiting...");
+		rator.on(key, cb);
+	}
+}
+
+Thunkarator.prototype.all = function(){
+	var args = [].slice.call(arguments,0);
+	
+	var coObj = {};
+
+	for(var i=0; i<args.length; i++){
+		var key = args[i];
+		coObj[key] = this.get(key);
+	}
+
+	return coObj;
 }
 
 

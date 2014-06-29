@@ -14,15 +14,16 @@ function Thunkarator(){
 }
 
 Thunkarator.prototype.start = function(key, thunk) {
-	debug("starting a thunk", key);
 	
 	if(this.used[key]){
+		debug("DUPE!", key);
 		throw new Error("You cannot reuse pending keys");
 	}
 	else{
+		debug(key, "starting...");
 		this.used[key] = true;
 		thunk(function(err, result){
-			debug("thunk is done", result, key);
+			debug(key, "is ready");
 			this.done[key] = {err:err, result:result};
 			this.emit(key, this.done[key]);
 		}.bind(this));
@@ -31,18 +32,21 @@ Thunkarator.prototype.start = function(key, thunk) {
 
 Thunkarator.prototype.get = function(key){
 	return thunkify(function(rator, cb){
-		var result = rator.done[key];
-		debug("waiter", result, key);
-		if(result){
+
+		function respond(result){
 			rator.used[key] = false;
-			cb(result.error, result.result);
+			debug(key, "done");
+			cb(result.err, result.result);
+		}
+
+		var result = rator.done[key];
+		if(result){
+			respond(result);
 		}
 		else{
-			debug("wait for event to be emitted", key);
+			debug(key, "waiting...");
 			rator.on(key, function(result){
-				rator.used[key] = false;
-				debug("we've been waiting for you", key, result);
-				cb(result.error, result.result);
+				respond(result);
 			});
 		}
 	})(this);

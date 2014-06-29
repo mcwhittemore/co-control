@@ -84,7 +84,7 @@ describe("co-control should", function(){
 			try{
 				thunkster.start("thrown", fail());
 				errors.thrown.afterStart = process.hrtime()[1];
-				yield thunkster.get("thrown");
+				errors.thrown.value = yield thunkster.get("thrown");
 				errors.thrown.never = process.hrtime()[1];
 			}
 			catch(err){
@@ -132,12 +132,12 @@ describe("co-control should", function(){
 		errors.notDupe.should.equal("one");
 	});
 
-	//this is not passings
 	it("throw an error on async failure", function(){
 		if(errors.thrown.afterStart===undefined){
 			throw new Error("Error thrown at thunkster.start not thunkster.get");
 		}
 		else if(errors.thrown.never!==undefined){
+			console.log(errors.thrown);
 			throw new Error("Error not thrown on get");
 		}
 		else{

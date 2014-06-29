@@ -6,6 +6,13 @@ var Thunkarator = require("../");
 
 describe("co-control should", function(){
 
+	/**
+	 * This is a bunch of prep.
+	 * To keep tests simple and fast we
+	 * are running a program that should
+	 * in a before all and testing it later
+	 */
+
 	var result = {
 		one: {},
 		two: {},
@@ -20,7 +27,9 @@ describe("co-control should", function(){
 		multi: {}
 	};
 
-	var tasks = ["one", "two", "three", "four"];
+	// these results all track their order so we can
+	// loop over them to confirm a few things
+	var orderTests = ["one", "two", "three", "four"];
 
 	var orderOfOpp = 0;
 
@@ -104,14 +113,18 @@ describe("co-control should", function(){
 		})();
 	});
 
+	/**
+	 * Here is where the tests really begin
+	 */
+
 	it("not yield a result until the async is done", function(){
-		tasks.forEach(function(task){
+		orderTests.forEach(function(task){
 			result[task].ready.should.be.lessThan(result[task].returned);
 		});
 	});
 
 	it("start a co-routinue asap", function(){
-		tasks.forEach(function(task){
+		orderTests.forEach(function(task){
 			result[task].start.should.be.lessThan(result[task].queued);
 		});
 	});
@@ -126,7 +139,7 @@ describe("co-control should", function(){
 	});
 
 	it("yield the correct co-routinues value", function(){
-		tasks.forEach(function(task){
+		orderTests.forEach(function(task){
 			result[task].value.should.equal(task);
 		});
 	});

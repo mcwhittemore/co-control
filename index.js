@@ -1,7 +1,7 @@
-var debug = require("debug")("thunkarator");
+var debug = require("debug")("co-control");
 var thunkify = require("thunkify");
 
-function Thunkarator(){
+function CoControl(){
 	this.done = {};
 	this.used = {};
 
@@ -13,7 +13,7 @@ function Thunkarator(){
 
 }
 
-Thunkarator.prototype.start = function(key, thunk) {
+CoControl.prototype.start = function(key, thunk) {
 	
 	if(this.used[key]){
 		debug("DUPE!", key);
@@ -30,7 +30,7 @@ Thunkarator.prototype.start = function(key, thunk) {
 	}
 };
 
-Thunkarator.prototype.get = function(key){
+CoControl.prototype.get = function(key){
 	return thunkify(function(rator, cb){
 
 		function respond(result){
@@ -58,7 +58,7 @@ function gather(rator, key, cb){
 	}
 }
 
-Thunkarator.prototype.all = function(){
+CoControl.prototype.all = function(){
 	var args = [].slice.call(arguments,0);
 	
 	var coObj = {};
@@ -72,4 +72,4 @@ Thunkarator.prototype.all = function(){
 }
 
 
-module.exports = Thunkarator;
+module.exports = CoControl;

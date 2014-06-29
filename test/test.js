@@ -2,7 +2,7 @@ var co = require("co");
 var thunkify = require("thunkify");
 
 //var store = require("./store");
-var Thunkarator = require("../");
+var CoControl = require("../");
 
 describe("co-control should", function(){
 
@@ -50,32 +50,32 @@ describe("co-control should", function(){
 
 	before(function(done){
 
-		var thunkster = new Thunkarator();
+		var controller = new CoControl();
 
 		function enqueue(name, time){
-			thunkster.start(name, delayName(name, time));
+			controller.start(name, delayName(name, time));
 			result[name].queued = orderOfOpp++;
 		}
 
 		function gather(name){
 			return function*(){
 				result[name].called = orderOfOpp++;
-				result[name].value = yield thunkster.get(name);
+				result[name].value = yield controller.get(name);
 				result[name].returned = orderOfOpp++;
 			}
 		}
 
 		co(function*(){
-			thunkster.start("a", delayName("a", 30));
-			thunkster.start("b", delayName("b", 40));
-			thunkster.start("c", delayName("c", 100));
+			controller.start("a", delayName("a", 30));
+			controller.start("b", delayName("b", 40));
+			controller.start("c", delayName("c", 100));
 
 			enqueue("one", 400);
 			enqueue("two", 300);
 			enqueue("three", 200);
 
 			try{
-				thunkster.start("one", noop());
+				controller.start("one", noop());
 			}
 			catch(err){
 				result.dupe = err;
@@ -90,24 +90,24 @@ describe("co-control should", function(){
 			yield gather("four");
 
 			try{
-				thunkster.start("one", noop);
-				result.notDupe = yield thunkster.get("one");
+				controller.start("one", noop);
+				result.notDupe = yield controller.get("one");
 			}
 			catch(err){
 				result.notDupe = err;
 			}
 
 			try{
-				thunkster.start("thrown", fail());
+				controller.start("thrown", fail());
 				result.thrown.afterStart = orderOfOpp++;
-				result.thrown.value = yield thunkster.get("thrown");
+				result.thrown.value = yield controller.get("thrown");
 				result.thrown.never = orderOfOpp++;
 			}
 			catch(err){
 				result.thrown.err = err;
 			}
 
-			result.multi = yield thunkster.all("a", "b", "c");
+			result.multi = yield controller.all("a", "b", "c");
 
 			done();
 		})();
@@ -156,7 +156,7 @@ describe("co-control should", function(){
 
 	it("throw an error on async failure", function(){
 		if(result.thrown.afterStart===undefined){
-			throw new Error("Error thrown at thunkster.start not thunkster.get");
+			throw new Error("Error thrown at controller.start not controller.get");
 		}
 		else if(result.thrown.never!==undefined){
 			console.log(result.thrown);

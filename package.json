@@ -1,6 +1,6 @@
 {
-  "name": "thunkarator",
-  "version": "0.0.0",
+  "name": "co-control",
+  "version": "0.1.0",
   "description": "start async jobs when you want, access the results when you want.",
   "main": "index.js",
   "directories": {

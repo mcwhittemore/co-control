@@ -107,7 +107,7 @@ describe("co-control should", function(){
 				result.thrown.err = err;
 			}
 
-			result.multi = yield controller.all("a", "b", "c");
+			result.multi = yield controller.all(["a", "b", "c"]);
 
 			done();
 		})();

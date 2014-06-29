@@ -58,13 +58,12 @@ function gather(rator, key, cb){
 	}
 }
 
-CoControl.prototype.all = function(){
-	var args = [].slice.call(arguments,0);
+CoControl.prototype.all = function(keys){
 	
 	var coObj = {};
 
-	for(var i=0; i<args.length; i++){
-		var key = args[i];
+	for(var i=0; i<keys.length; i++){
+		var key = keys[i];
 		coObj[key] = this.get(key);
 	}
 

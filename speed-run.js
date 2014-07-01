@@ -65,7 +65,9 @@ co(function*(){
 			var compare = tests[j];
 			if(compare!=test){
 				var mark = headToHead[test][compare] < 0 ? "WIN" : "LOSS";
-				console.log("\t", mark, "vs", compare, "by running", headToHead[test][compare]*-1, "nano seconds faster");
+				var rate = headToHead[test][compare] < 0 ? headToHead[test][compare]*-1 : headToHead[test][compare];
+				var dir =  headToHead[test][compare] < 0 ? "faster" : "slower"
+				console.log("\t", mark, test, "vs", compare, "by running", rate, "nano seconds", dir);
 			}
 		}
 	}

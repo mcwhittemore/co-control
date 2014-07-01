@@ -42,7 +42,8 @@ co(function*(){
 	for(var i=0; i<numTests; i++){
 		var test = tests[i];
 		for(var j=0; j<iterations; j++){
-			results[test] = yield controller.get(test+"-"+j);
+			results[test] = results[test] || 0;
+			results[test] += yield controller.get(test+"-"+j);
 		}
 
 		for(var k=0; k<i; k++){
@@ -64,7 +65,7 @@ co(function*(){
 			var compare = tests[j];
 			if(compare!=test){
 				var mark = headToHead[test][compare] < 0 ? "WIN" : "LOSS";
-				console.log("\t", mark, "vs", compare, "by", headToHead[test][compare]);
+				console.log("\t", mark, "vs", compare, "by running", headToHead[test][compare]*-1, "nano seconds faster");
 			}
 		}
 	}

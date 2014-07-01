@@ -11,29 +11,22 @@ var fast = thunkify(function(cb){
 });
 
 module.exports = {
-	co: co(function*(cb){
-		
-		yield slow();
-		yield fast();
+	"co-obj": co(function*(cb){
+		yield {
+			s: slow(),
+			f: fast()
+		}
 
 		cb()
 	}),
-	"co-array": co(function*(cb){
-		var s = slow();
-		var f = fast();
-		yield [s, f];
-		cb();
-	}),
-	control: co(function*(cb){
-
+	"control-obj": co(function*(cb){
 		var controller = new CoControl();
 
 		controller.start("sd", slow());
 		controller.start("fd", fast());
-		
-		yield controller.get("fd");
-		yield controller.get("sd");
-		
+
+		yield controller.all("sd", "fd");
+
 		cb();
 	})
 }

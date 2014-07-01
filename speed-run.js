@@ -2,7 +2,7 @@ var co = require("co");
 var CoControl = require("./");
 var thunkify = require("thunkify");
 
-var setTimeout = require("./speed/"+process.argv[2]);
+var testSuite = require("./speed/"+process.argv[2]);
 var iterations = 100;
 
 function tester(fn, cb){
@@ -21,13 +21,13 @@ co(function*(){
 
 	var controller = new CoControl();
 
-	var tests = Object.keys(setTimeout);
+	var tests = Object.keys(testSuite);
 	var numTests = tests.length;
 
 	for(var i=0; i<numTests; i++){
 		var test = tests[i];
 		var fn = thunkify(function(cb){
-			tester(setTimeout[test], cb);
+			tester(testSuite[test], cb);
 		});
 		for(var j=0; j<iterations; j++){
 			controller.start(test+"-"+j, fn());

@@ -19,5 +19,21 @@
     "test": "make test"
   },
   "author": "Matthew Chase Whittemore <mcwhittemore@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mcwhittemore/co-control.git"
+  },
+  "keywords": [
+    "co",
+    "async",
+    "coroutines",
+    "koa",
+    "es6",
+    "generators"
+  ],
+  "bugs": {
+    "url": "https://github.com/mcwhittemore/co-control/issues"
+  },
+  "homepage": "https://github.com/mcwhittemore/co-control"
 }

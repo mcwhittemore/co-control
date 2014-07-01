@@ -3,11 +3,11 @@ var co = require("co");
 var CoControl = require("../");
 
 var slow = thunkify(function(cb){
-	setTimeout(function(){cb(null)}, 20);
+	setTimeout(function(){cb(null)}, 30);
 });
 
 var fast = thunkify(function(cb){
-	setTimeout(function(){cb(null)}, 2);
+	setTimeout(function(){cb(null)}, 1);
 });
 
 module.exports = {
